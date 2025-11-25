@@ -8,7 +8,7 @@ import { handleGenerateIdeas, handleExpandIdea } from './actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Wand2, History, Trash2, Save } from 'lucide-react';
+import { Loader2, Wand2, History, Trash2, Save, BookText } from 'lucide-react';
 import { Header } from '@/components/app/header';
 import { IdeaCard } from '@/components/app/idea-card';
 import { IdeaDetailsDialog } from '@/components/app/idea-details-dialog';
@@ -130,8 +130,9 @@ export default function Home() {
             <Header />
             <main className="flex-grow container mx-auto px-4 pb-16">
                 <Tabs defaultValue="generator" className="max-w-4xl mx-auto mt-8">
-                    <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="generator"><Wand2 className="mr-2"/> Generator</TabsTrigger>
+                    <TabsList className="grid w-full grid-cols-3">
+                        <TabsTrigger value="generator"><Wand2 className="mr-2"/> Topic Generator</TabsTrigger>
+                        <TabsTrigger value="story-generator"><BookText className="mr-2"/> Story Generator</TabsTrigger>
                         <TabsTrigger value="history"><History className="mr-2"/> My Ideas</TabsTrigger>
                     </TabsList>
                     <TabsContent value="generator">
@@ -190,6 +191,15 @@ export default function Home() {
                                 <p className="text-muted-foreground">No ideas were generated. Please try a different or more specific topic.</p>
                             </div>
                         )}
+                    </TabsContent>
+                    <TabsContent value="story-generator">
+                        <div className="text-center py-16">
+                            <BookText className="mx-auto h-12 w-12 text-muted-foreground" />
+                            <h3 className="mt-4 text-lg font-medium">Story Generator Coming Soon</h3>
+                            <p className="mt-1 text-sm text-muted-foreground">
+                                This feature is under construction.
+                            </p>
+                        </div>
                     </TabsContent>
                     <TabsContent value="history">
                        <SavedIdeasTab />
@@ -298,6 +308,8 @@ function SavedIdeasTab() {
         </div>
     )
 }
+
+    
 
     
 
