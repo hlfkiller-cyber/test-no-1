@@ -9,7 +9,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/firebase';
+import { useAuth, useUser } from '@/firebase';
 import { GoogleAuthProvider, signInWithPopup, User } from 'firebase/auth';
 import { doc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
@@ -35,37 +35,40 @@ const GoogleIcon = () => (
 export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
   const auth = useAuth();
   const firestore = useFirestore();
+  const { user } = useUser();
   const [isSigningIn, setIsSigningIn] = useState(false);
-  const [userForDb, setUserForDb] = useState<User | null>(null);
 
   useEffect(() => {
-    if (!userForDb || !firestore) return;
-
-    const checkAndCreateUser = async (user: User) => {
-      const userDocRef = doc(firestore, 'users', user.uid);
-      try {
-        const userDocSnap = await getDoc(userDocRef);
-        if (!userDocSnap.exists()) {
-          const userData = {
-            id: user.uid,
-            displayName: user.displayName,
-            email: user.email,
-            photoURL: user.photoURL,
-            createdAt: serverTimestamp(),
-          };
-          setDocumentNonBlocking(userDocRef, userData, { merge: false });
-        }
-      } catch (error) {
-        console.error("Error checking or creating user document:", error);
-      } finally {
-        setUserForDb(null); // Reset after operation
+    // If sign-in was successful, close the dialog
+    if (user && isSigningIn) {
         setIsSigningIn(false);
         onOpenChange(false);
-      }
-    };
+    }
+    
+    // Check if the user document needs to be created
+    if (user && firestore) {
+      const checkAndCreateUser = async (user: User) => {
+        const userDocRef = doc(firestore, 'users', user.uid);
+        try {
+          const userDocSnap = await getDoc(userDocRef);
+          if (!userDocSnap.exists()) {
+            const userData = {
+              id: user.uid,
+              displayName: user.displayName,
+              email: user.email,
+              photoURL: user.photoURL,
+              createdAt: serverTimestamp(),
+            };
+            setDocumentNonBlocking(userDocRef, userData, { merge: false });
+          }
+        } catch (error) {
+          console.error("Error checking or creating user document:", error);
+        }
+      };
 
-    checkAndCreateUser(userForDb);
-  }, [userForDb, firestore, onOpenChange]);
+      checkAndCreateUser(user);
+    }
+  }, [user, firestore, onOpenChange, isSigningIn]);
 
   const handleGoogleSignIn = async () => {
     if (!auth) return;
@@ -74,8 +77,7 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
     const provider = new GoogleAuthProvider();
 
     try {
-      const result = await signInWithPopup(auth, provider);
-      setUserForDb(result.user); // Set the user to trigger the useEffect
+      await signInWithPopup(auth, provider);
     } catch (error) {
       console.error('Google Sign-In Error:', error);
       setIsSigningIn(false); // Reset on error
