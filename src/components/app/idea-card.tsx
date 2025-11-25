@@ -1,9 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Lightbulb, ArrowRight, CheckCircle } from "lucide-react";
-import type { GenerateVideoIdeasOutput } from "@/ai/flows/generate-video-ideas";
+import type { GenerateContentIdeasOutput } from "@/ai/flows/generate-video-ideas";
 
-type Idea = GenerateVideoIdeasOutput['ideas'][0];
+type Idea = GenerateContentIdeasOutput['ideas'][0];
 
 interface IdeaCardProps {
   idea: Idea;
@@ -24,6 +24,7 @@ export function IdeaCard({ idea, onExpand, isLoading, isSelected, isSaved }: Ide
           <CardTitle className="text-lg leading-tight">{idea.title}</CardTitle>
           <CardDescription className="mt-2 text-base leading-relaxed">{idea.description}</CardDescription>
         </div>
+
       </CardHeader>
       <CardFooter className="mt-auto bg-card border-t p-4">
         {isSaved ? (
