@@ -11,6 +11,43 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
+const AnalyzeTopicInputSchema = z.object({
+  topic: z.string().describe('The user-provided topic.'),
+});
+type AnalyzeTopicInput = z.infer<typeof AnalyzeTopicInputSchema>;
+
+const AnalyzeTopicOutputSchema = z.object({
+  analyzedTopic: z.string().describe('A refined and clarified version of the topic, suitable for generating content ideas.'),
+});
+type AnalyzeTopicOutput = z.infer<typeof AnalyzeTopicOutputSchema>;
+
+const analyzeTopicPrompt = ai.definePrompt({
+  name: 'analyzeTopicPrompt',
+  input: {schema: AnalyzeTopicInputSchema},
+  output: {schema: AnalyzeTopicOutputSchema},
+  prompt: `You are an expert at understanding user intent. Your task is to analyze the user's topic and refine it for a content idea generation system.
+
+The user's topic is: {{{topic}}}
+
+Clarify and enrich this topic. For example, if the user enters "React", you might refine it to "The popular JavaScript library for building user interfaces, React.js". If the user enters "MrBeast", you might refine it to "The famous YouTuber known for his extravagant stunts and philanthropy, MrBeast".
+
+Return the refined topic in the 'analyzedTopic' field.
+`,
+});
+
+const analyzeTopicFlow = ai.defineFlow(
+  {
+    name: 'analyzeTopicFlow',
+    inputSchema: AnalyzeTopicInputSchema,
+    outputSchema: AnalyzeTopicOutputSchema,
+  },
+  async input => {
+    const {output} = await analyzeTopicPrompt(input);
+    return output!;
+  }
+);
+
+
 const GenerateContentIdeasInputSchema = z.object({
   topic: z.string().describe('The topic, person, or tool to generate ideas for.'),
 });
@@ -55,12 +92,12 @@ const getTopicTrendsTool = ai.defineTool(
 
 const generateIdeasPrompt = ai.definePrompt({
   name: 'generateIdeasPrompt',
-  input: {schema: GenerateContentIdeasInputSchema},
+  input: {schema: z.object({ analyzedTopic: z.string() })},
   output: {schema: GenerateContentIdeasOutputSchema},
   tools: [getTopicTrendsTool],
   prompt: `You are a creative content strategist. Given a topic, person, or tool, you will generate 5 unique and engaging content ideas with brief descriptions. If it's a person, consider recent news, controversies, or popular opinions. If it's a tool, think about tutorials, comparisons, or interesting use cases. Use the getTopicTrends tool to get inspiration from current trends.
 
-Topic: {{{topic}}}
+Topic: {{{analyzedTopic}}}
 
 Generate 5 unique and engaging content ideas inspired by the topic and recent trends. Each idea should have a title and a brief description.
 
@@ -74,8 +111,12 @@ const generateContentIdeasFlow = ai.defineFlow(
     inputSchema: GenerateContentIdeasInputSchema,
     outputSchema: GenerateContentIdeasOutputSchema,
   },
-  async input => {
-    const {output} = await generateIdeasPrompt(input);
+  async (input: GenerateContentIdeasInput) => {
+    // First, analyze the topic
+    const analyzedResult = await analyzeTopicFlow({ topic: input.topic });
+    
+    // Then, use the analyzed topic to generate ideas
+    const {output} = await generateIdeasPrompt({ analyzedTopic: analyzedResult.analyzedTopic });
     return output!;
   }
 );
