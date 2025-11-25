@@ -39,13 +39,11 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
   const [isSigningIn, setIsSigningIn] = useState(false);
 
   useEffect(() => {
-    // If sign-in was successful (user object is available), close the dialog
     if (user && open) {
         setIsSigningIn(false);
         onOpenChange(false);
     }
     
-    // Check if the user document needs to be created, separated from sign-in flow
     if (user && firestore) {
       const checkAndCreateUser = async (currentUser: User) => {
         const userDocRef = doc(firestore, 'users', currentUser.uid);
@@ -59,7 +57,6 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
               photoURL: currentUser.photoURL,
               createdAt: serverTimestamp(),
             };
-            // This is a non-blocking write operation
             setDocumentNonBlocking(userDocRef, userData, { merge: false });
           }
         } catch (error) {
@@ -71,20 +68,22 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
     }
   }, [user, firestore, onOpenChange, open]);
 
-  const handleGoogleSignIn = async () => {
+  const handleGoogleSignIn = () => {
     if (!auth) return;
 
     setIsSigningIn(true);
     const provider = new GoogleAuthProvider();
 
-    try {
-      // This call needs to be as direct as possible from the user click.
-      await signInWithPopup(auth, provider);
-      // The useEffect will handle the rest once `user` state updates.
-    } catch (error) {
-      console.error('Google Sign-In Error:', error);
-      setIsSigningIn(false); // Reset on error
-    }
+    signInWithPopup(auth, provider)
+      .catch((error) => {
+        console.error('Google Sign-In Error:', error);
+      })
+      .finally(() => {
+        // This will run regardless of success or failure.
+        // The useEffect handles success, so we only need to handle the non-success case here.
+        // We can check if `user` is set after a short delay, but for now, we'll optimistically rely on onAuthStateChanged
+        // It's better to let the loading state persist until the user state is confirmed.
+      });
   };
 
   return (
