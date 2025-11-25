@@ -1,4 +1,4 @@
-import type { ExpandVideoIdeaDetailsOutput } from "@/ai/flows/expand-video-idea-details";
+import type { ExpandContentIdeaDetailsOutput } from "@/ai/flows/expand-video-idea-details";
 import {
   Dialog,
   DialogContent,
@@ -10,14 +10,12 @@ import {
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import Image from "next/image";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { Loader2, Save, CheckCircle } from "lucide-react";
 import { Button } from "../ui/button";
 import { useUser } from "@/firebase";
 
 interface IdeaDetailsDialogProps {
-  details: ExpandVideoIdeaDetailsOutput | null;
+  details: ExpandContentIdeaDetailsOutput | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   ideaTitle: string;
@@ -28,7 +26,6 @@ interface IdeaDetailsDialogProps {
 }
 
 export function IdeaDetailsDialog({ details, open, onOpenChange, ideaTitle, isLoading, onSave, isSaving, isSaved }: IdeaDetailsDialogProps) {
-  const thumbnailPlaceholder = PlaceHolderImages.find(img => img.id === 'thumbnail-concept-1');
   const { user } = useUser();
 
   return (
@@ -48,7 +45,7 @@ export function IdeaDetailsDialog({ details, open, onOpenChange, ideaTitle, isLo
             </div>
           ) : details && (
             <ScrollArea className="h-[60vh] pr-4">
-              <Accordion type="multiple" defaultValue={['item-1', 'item-2']} className="w-full">
+              <Accordion type="multiple" defaultValue={['item-1', 'item-2', 'item-3', 'item-4']} className="w-full">
                 <AccordionItem value="item-1">
                   <AccordionTrigger className="text-lg">Script Outline</AccordionTrigger>
                   <AccordionContent className="text-base text-muted-foreground whitespace-pre-wrap leading-relaxed">
@@ -61,6 +58,7 @@ export function IdeaDetailsDialog({ details, open, onOpenChange, ideaTitle, isLo
                     <div className="flex flex-wrap gap-2">
                       {details.titleSuggestions.map((title, index) => (
                         <Badge key={index} variant="secondary" className="text-sm px-3 py-1 bg-accent/50 text-accent-foreground border-accent">{title}</Badge>
+
                       ))}
                     </div>
                   </AccordionContent>
@@ -68,18 +66,6 @@ export function IdeaDetailsDialog({ details, open, onOpenChange, ideaTitle, isLo
                 <AccordionItem value="item-3">
                   <AccordionTrigger className="text-lg">Thumbnail Concepts</AccordionTrigger>
                   <AccordionContent className="text-base text-muted-foreground whitespace-pre-wrap leading-relaxed">
-                    {thumbnailPlaceholder && (
-                        <div className="mb-4">
-                          <Image
-                            src={thumbnailPlaceholder.imageUrl}
-                            alt={thumbnailPlaceholder.description}
-                            width={480}
-                            height={270}
-                            className="rounded-lg shadow-md w-full h-auto"
-                            data-ai-hint={thumbnailPlaceholder.imageHint}
-                          />
-                        </div>
-                    )}
                     {details.thumbnailConcepts}
                   </AccordionContent>
                 </AccordionItem>
