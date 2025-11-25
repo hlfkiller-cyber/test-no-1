@@ -1,11 +1,12 @@
 import { Video } from 'lucide-react';
 import { UserProfileButton } from '@/components/app/user-profile-button';
+import Link from 'next/link';
 
 export function Header() {
   return (
     <header className="py-4 md:py-6 bg-card/50 border-b">
       <div className="container mx-auto px-4 flex justify-between items-center">
-        <div className="flex items-center justify-center gap-4">
+        <Link href="/" className="flex items-center justify-center gap-4">
           <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">
             <Video className="h-8 w-8 text-primary" />
           </div>
@@ -17,7 +18,7 @@ export function Header() {
               Ignite your next viral video idea with the power of AI.
             </p>
           </div>
-        </div>
+        </Link>
         <UserProfileButton />
       </div>
     </header>
