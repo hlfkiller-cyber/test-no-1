@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -10,9 +11,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/firebase';
 import { GoogleAuthProvider, signInWithPopup, User } from 'firebase/auth';
-import { doc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore';
+import { doc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
@@ -35,38 +36,49 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
   const auth = useAuth();
   const firestore = useFirestore();
   const [isSigningIn, setIsSigningIn] = useState(false);
+  const [userForDb, setUserForDb] = useState<User | null>(null);
+
+  useEffect(() => {
+    if (!userForDb || !firestore) return;
+
+    const checkAndCreateUser = async (user: User) => {
+      const userDocRef = doc(firestore, 'users', user.uid);
+      try {
+        const userDocSnap = await getDoc(userDocRef);
+        if (!userDocSnap.exists()) {
+          const userData = {
+            id: user.uid,
+            displayName: user.displayName,
+            email: user.email,
+            photoURL: user.photoURL,
+            createdAt: serverTimestamp(),
+          };
+          setDocumentNonBlocking(userDocRef, userData, { merge: false });
+        }
+      } catch (error) {
+        console.error("Error checking or creating user document:", error);
+      } finally {
+        setUserForDb(null); // Reset after operation
+        setIsSigningIn(false);
+        onOpenChange(false);
+      }
+    };
+
+    checkAndCreateUser(userForDb);
+  }, [userForDb, firestore, onOpenChange]);
 
   const handleGoogleSignIn = async () => {
-    if (!auth || !firestore) return;
+    if (!auth) return;
 
     setIsSigningIn(true);
     const provider = new GoogleAuthProvider();
 
     try {
       const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-
-      // Check if user document already exists
-      const userDocRef = doc(firestore, 'users', user.uid);
-      const userDocSnap = await getDoc(userDocRef);
-
-      if (!userDocSnap.exists()) {
-        // New user, create a document in a non-blocking way
-        const userData = {
-          id: user.uid,
-          displayName: user.displayName,
-          email: user.email,
-          photoURL: user.photoURL,
-          createdAt: serverTimestamp(),
-        };
-        setDocumentNonBlocking(userDocRef, userData, { merge: false });
-      }
-      
-      onOpenChange(false);
+      setUserForDb(result.user); // Set the user to trigger the useEffect
     } catch (error) {
       console.error('Google Sign-In Error:', error);
-    } finally {
-      setIsSigningIn(false);
+      setIsSigningIn(false); // Reset on error
     }
   };
 
