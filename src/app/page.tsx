@@ -153,7 +153,7 @@ export default function Home() {
                                     type="text"
                                     value={topic}
                                     onChange={(e) => setTopic(e.target.value)}
-                                    placeholder="e.g., 'Elon Musk' or 'ReactJS'"
+                                    placeholder="Drop your niche or topic here..."
                                     className="flex-grow text-base"
                                     aria-label="Content Topic Input"
                                 />
