@@ -39,36 +39,37 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
   const [isSigningIn, setIsSigningIn] = useState(false);
 
   useEffect(() => {
-    // If sign-in was successful, close the dialog
-    if (user && isSigningIn) {
+    // If sign-in was successful (user object is available), close the dialog
+    if (user && open) {
         setIsSigningIn(false);
         onOpenChange(false);
     }
     
-    // Check if the user document needs to be created
+    // Check if the user document needs to be created, separated from sign-in flow
     if (user && firestore) {
-      const checkAndCreateUser = async (user: User) => {
-        const userDocRef = doc(firestore, 'users', user.uid);
+      const checkAndCreateUser = async (currentUser: User) => {
+        const userDocRef = doc(firestore, 'users', currentUser.uid);
         try {
           const userDocSnap = await getDoc(userDocRef);
           if (!userDocSnap.exists()) {
             const userData = {
-              id: user.uid,
-              displayName: user.displayName,
-              email: user.email,
-              photoURL: user.photoURL,
+              id: currentUser.uid,
+              displayName: currentUser.displayName,
+              email: currentUser.email,
+              photoURL: currentUser.photoURL,
               createdAt: serverTimestamp(),
             };
+            // This is a non-blocking write operation
             setDocumentNonBlocking(userDocRef, userData, { merge: false });
           }
         } catch (error) {
           console.error("Error checking or creating user document:", error);
         }
       };
-
+      
       checkAndCreateUser(user);
     }
-  }, [user, firestore, onOpenChange, isSigningIn]);
+  }, [user, firestore, onOpenChange, open]);
 
   const handleGoogleSignIn = async () => {
     if (!auth) return;
@@ -77,7 +78,9 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
     const provider = new GoogleAuthProvider();
 
     try {
+      // This call needs to be as direct as possible from the user click.
       await signInWithPopup(auth, provider);
+      // The useEffect will handle the rest once `user` state updates.
     } catch (error) {
       console.error('Google Sign-In Error:', error);
       setIsSigningIn(false); // Reset on error
