@@ -9,25 +9,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Wand2, History, Trash2, Save, BookText, Sparkles } from 'lucide-react';
+import { Loader2, Wand2, History, BookText, Sparkles } from 'lucide-react';
 import { Header } from '@/components/app/header';
 import { IdeaCard } from '@/components/app/idea-card';
 import { IdeaDetailsDialog } from '@/components/app/idea-details-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { collection, doc } from 'firebase/firestore';
+import { collection } from 'firebase/firestore';
 import { LoginDialog } from '@/components/app/login-dialog';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -131,11 +120,11 @@ export default function Home() {
         <div className="flex flex-col min-h-screen">
             <Header />
             <main className="flex-grow container mx-auto px-4 pb-16">
-                <Tabs defaultValue="generator" className="max-w-4xl mx-auto mt-8">
-                    <TabsList className="grid w-full grid-cols-3">
-                        <TabsTrigger value="generator"><Wand2 className="mr-2"/> Topic Generator</TabsTrigger>
-                        <TabsTrigger value="story-generator"><BookText className="mr-2"/> Story Generator</TabsTrigger>
-                        <TabsTrigger value="history"><History className="mr-2"/> My Ideas</TabsTrigger>
+                <Tabs defaultValue="generator" className="max-w-4xl mx-auto mt-4 sm:mt-8">
+                    <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 h-auto sm:h-10">
+                        <TabsTrigger value="generator" className="py-2.5 sm:py-1.5"><Wand2 className="mr-2"/> Topic Generator</TabsTrigger>
+                        <TabsTrigger value="story-generator" className="py-2.5 sm:py-1.5"><BookText className="mr-2"/> Story Generator</TabsTrigger>
+                        <TabsTrigger value="history" className="py-2.5 sm:py-1.5"><History className="mr-2"/> My Ideas</TabsTrigger>
                     </TabsList>
                     <TabsContent value="generator">
                         <div className="max-w-2xl mx-auto py-8">
@@ -170,7 +159,7 @@ export default function Home() {
                             <div className="flex flex-col items-center">
                                 <div className="w-full">
                                     <div className="text-center mb-8">
-                                        <h2 className="text-3xl font-bold tracking-tight">5 Fresh Ideas for "{lastSearchedTopic}"</h2>
+                                        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">5 Fresh Ideas for "{lastSearchedTopic}"</h2>
                                         <p className="text-muted-foreground mt-2">Here are some creative sparks. Click 'Expand Idea' for more details.</p>
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
@@ -254,7 +243,7 @@ function StoryGeneratorTab() {
     return (
         <div className="max-w-2xl mx-auto py-8">
             <div className="text-center mb-8">
-                <h2 className="text-3xl font-bold tracking-tight">Fantasy Story Generator</h2>
+                <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Fantasy Story Generator</h2>
                 <p className="text-muted-foreground mt-2">Enter a character, a setting, or a simple idea, and let the AI write a fantasy story for you.</p>
             </div>
             <form onSubmit={onGenerateStory} className="flex flex-col gap-4 mb-8">
@@ -285,7 +274,7 @@ function StoryGeneratorTab() {
             {story && !isLoading && (
                 <Card>
                     <CardContent className="p-6">
-                        <div className="whitespace-pre-wrap text-lg leading-relaxed">
+                        <div className="whitespace-pre-wrap font-body text-lg leading-relaxed">
                             {story}
                         </div>
                     </CardContent>
@@ -339,7 +328,7 @@ function SavedIdeasTab() {
         <div className="py-8">
             <div className="flex justify-between items-center mb-6">
                 <div>
-                    <h2 className="text-3xl font-bold tracking-tight">My Saved Ideas</h2>
+                    <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">My Saved Ideas</h2>
                     <p className="text-muted-foreground mt-2">Browse your collection of content ideas.</p>
                 </div>
             </div>
@@ -375,5 +364,3 @@ function SavedIdeasTab() {
         </div>
     )
 }
-
-    
