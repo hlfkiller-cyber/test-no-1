@@ -285,7 +285,7 @@ function StoryGeneratorTab() {
             {story && !isLoading && (
                 <Card>
                     <CardContent className="p-6">
-                        <div className="whitespace-pre-wrap font-serif text-lg leading-relaxed">
+                        <div className="whitespace-pre-wrap text-lg leading-relaxed">
                             {story}
                         </div>
                     </CardContent>
@@ -375,3 +375,5 @@ function SavedIdeasTab() {
         </div>
     )
 }
+
+    

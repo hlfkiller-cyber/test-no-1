@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -29,15 +30,15 @@ const generateStoryPrompt = ai.definePrompt({
   name: 'generateFantasyStoryPrompt',
   input: {schema: GenerateFantasyStoryInputSchema},
   output: {schema: GenerateFantasyStoryOutputSchema},
-  prompt: `You are a master storyteller, specializing in weaving captivating fantasy tales.
-  
-  A user will provide you with a prompt, which could be a character, a setting, a situation, or just a few words. Your task is to take that prompt and expand it into a short, engaging fantasy story.
+  prompt: `You are a master storyteller. Your specialty is crafting simple, elegant fantasy stories inspired by Indian, Nepali, and Japanese folklore and style.
 
-  The story should have a clear beginning, middle, and end. It should be rich with imaginative details, vivid descriptions, and a touch of magic or wonder.
+  A user will provide you with a prompt. Your task is to take that prompt and expand it into a short, engaging fantasy story.
+
+  The story should be straightforward and not overly complex, with a clear beginning, middle, and end. It should evoke a sense of wonder, drawing from the rich cultural traditions of the specified regions.
 
   User's Prompt: {{{prompt}}}
 
-  Craft a fantasy story based on this prompt. Make sure the response is in JSON format.
+  Craft a simple fantasy story based on this prompt, infused with the style of Indian, Nepali, or Japanese folklore. Make sure the response is in JSON format.
 `,
 });
 
@@ -52,3 +53,5 @@ const generateFantasyStoryFlow = ai.defineFlow(
     return output!;
   }
 );
+
+    
