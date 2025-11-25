@@ -1,0 +1,10 @@
+node_modules
+.next
+.idx
+.env
+.env.local
+.vscode
+dist
+.cache
+*.log
+project.zip
