@@ -31,8 +31,6 @@ import { LoginDialog } from '@/components/app/login-dialog';
 
 type Idea = GenerateContentIdeasOutput['ideas'][0] & { id?: string };
 
-const ANONYMOUS_SEARCH_LIMIT = 5;
-
 export default function Home() {
     const [topic, setTopic] = useState('');
     const [lastSearchedTopic, setLastSearchedTopic] = useState('');
@@ -41,7 +39,6 @@ export default function Home() {
     const [expandedDetails, setExpandedDetails] = useState<ExpandContentIdeaDetailsOutput | null>(null);
     const [isLoadingIdeas, setIsLoadingIdeas] = useState(false);
     const [isExpandingDetails, setIsExpandingDetails] = useState(false);
-    const [showClearConfirm, setShowClearConfirm] = useState(false);
     const [showLoginPrompt, setShowLoginPrompt] = useState(false);
     const { toast } = useToast();
     const { user, isUserLoading } = useUser();
@@ -52,15 +49,6 @@ export default function Home() {
         if (!topic.trim()) {
             toast({ title: "Topic required", description: "Please enter a topic, person, or tool to generate ideas.", variant: "destructive" });
             return;
-        }
-
-        if (!user) {
-            const anonymousSearches = parseInt(localStorage.getItem('anonymousSearches') || '0', 10);
-            if (anonymousSearches >= ANONYMOUS_SEARCH_LIMIT) {
-                setShowLoginPrompt(true);
-                return;
-            }
-            localStorage.setItem('anonymousSearches', (anonymousSearches + 1).toString());
         }
         
         setIsLoadingIdeas(true);
@@ -87,7 +75,7 @@ export default function Home() {
     
     const handleSaveIdea = async (idea: Idea, topic: string) => {
         if (!user || !firestore) {
-            toast({ title: "Login Required", description: "Please log in to save your ideas.", variant: "destructive" });
+            setShowLoginPrompt(true);
             return;
         }
 
@@ -310,5 +298,7 @@ function SavedIdeasTab() {
         </div>
     )
 }
+
+    
 
     
