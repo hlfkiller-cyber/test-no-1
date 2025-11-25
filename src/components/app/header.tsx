@@ -12,7 +12,7 @@ export function Header() {
           </div>
           <div className="flex flex-col">
             <h1 className="text-3xl md:text-4xl font-black tracking-tighter text-foreground sm:text-5xl font-headline">
-              Nitish Ideas
+              Video Ideas by Nitish and Nischal
             </h1>
             <p className="text-xs md:text-sm text-muted-foreground mt-1 hidden sm:block">
               Ignite your next viral video idea with the power of AI.
