@@ -2,8 +2,8 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import type { GenerateVideoIdeasOutput } from '@/ai/flows/generate-video-ideas';
-import type { ExpandVideoIdeaDetailsOutput } from '@/ai/flows/expand-video-idea-details';
+import type { GenerateContentIdeasOutput } from '@/ai/flows/generate-video-ideas';
+import type { ExpandContentIdeaDetailsOutput } from '@/ai/flows/expand-video-idea-details';
 import { handleGenerateIdeas, handleExpandIdea } from './actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,16 +29,16 @@ import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { collection, doc } from 'firebase/firestore';
 import { LoginDialog } from '@/components/app/login-dialog';
 
-type Idea = GenerateVideoIdeasOutput['ideas'][0] & { id?: string };
+type Idea = GenerateContentIdeasOutput['ideas'][0] & { id?: string };
 
 const ANONYMOUS_SEARCH_LIMIT = 5;
 
 export default function Home() {
-    const [niche, setNiche] = useState('');
-    const [lastSearchedNiche, setLastSearchedNiche] = useState('');
+    const [topic, setTopic] = useState('');
+    const [lastSearchedTopic, setLastSearchedTopic] = useState('');
     const [ideas, setIdeas] = useState<Idea[] | null>(null);
     const [selectedIdea, setSelectedIdea] = useState<Idea | null>(null);
-    const [expandedDetails, setExpandedDetails] = useState<ExpandVideoIdeaDetailsOutput | null>(null);
+    const [expandedDetails, setExpandedDetails] = useState<ExpandContentIdeaDetailsOutput | null>(null);
     const [isLoadingIdeas, setIsLoadingIdeas] = useState(false);
     const [isExpandingDetails, setIsExpandingDetails] = useState(false);
     const [showClearConfirm, setShowClearConfirm] = useState(false);
@@ -49,8 +49,8 @@ export default function Home() {
 
     const onGenerateSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (!niche.trim()) {
-            toast({ title: "Niche required", description: "Please enter a video niche to generate ideas.", variant: "destructive" });
+        if (!topic.trim()) {
+            toast({ title: "Topic required", description: "Please enter a topic, person, or tool to generate ideas.", variant: "destructive" });
             return;
         }
 
@@ -67,12 +67,12 @@ export default function Home() {
         setIdeas(null);
         setExpandedDetails(null);
         setSelectedIdea(null);
-        setLastSearchedNiche(niche);
+        setLastSearchedTopic(topic);
 
         try {
-            const result = await handleGenerateIdeas({ niche });
+            const result = await handleGenerateIdeas({ topic });
             if(result.ideas.length === 0){
-                toast({ title: "No ideas found", description: "The AI couldn't generate ideas for this niche. Try being more specific.", variant: "destructive" });
+                toast({ title: "No ideas found", description: "The AI couldn't generate ideas for this topic. Try being more specific.", variant: "destructive" });
                 setIdeas([]);
             } else {
                 setIdeas(result.ideas);
@@ -85,7 +85,7 @@ export default function Home() {
         }
     };
     
-    const handleSaveIdea = async (idea: Idea, niche: string) => {
+    const handleSaveIdea = async (idea: Idea, topic: string) => {
         if (!user || !firestore) {
             toast({ title: "Login Required", description: "Please log in to save your ideas.", variant: "destructive" });
             return;
@@ -100,7 +100,7 @@ export default function Home() {
         
         const newVideoIdea = {
             userId: user.uid,
-            niche: niche,
+            niche: topic, // Keep 'niche' for backward compatibility in Firestore schema
             title: idea.title,
             description: idea.description,
             scriptOutline: expandedDetails.scriptOutline,
@@ -119,13 +119,13 @@ export default function Home() {
     };
 
 
-    const onExpandClick = async (idea: Idea, niche: string) => {
+    const onExpandClick = async (idea: Idea, topic: string) => {
         setSelectedIdea(idea);
         setIsExpandingDetails(true);
         setExpandedDetails(null);
         
         try {
-            const result = await handleExpandIdea({ niche: niche, idea: idea.title });
+            const result = await handleExpandIdea({ topic: topic, idea: idea.title });
             setExpandedDetails(result);
         } catch (error) {
             console.error(error);
@@ -151,11 +151,11 @@ export default function Home() {
                             <form onSubmit={onGenerateSubmit} className="flex flex-col sm:flex-row items-center gap-2 mb-8">
                                 <Input
                                     type="text"
-                                    value={niche}
-                                    onChange={(e) => setNiche(e.target.value)}
-                                    placeholder="e.g., 'Sustainable home gardening'"
+                                    value={topic}
+                                    onChange={(e) => setTopic(e.target.value)}
+                                    placeholder="e.g., 'Elon Musk' or 'ReactJS'"
                                     className="flex-grow text-base"
-                                    aria-label="Video Niche Input"
+                                    aria-label="Content Topic Input"
                                 />
                                 <Button type="submit" disabled={isLoadingIdeas || isUserLoading} className="w-full sm:w-auto">
                                     {isLoadingIdeas ? (
@@ -171,7 +171,7 @@ export default function Home() {
                         {isLoadingIdeas && (
                             <div className="flex flex-col items-center justify-center text-center gap-4 py-16">
                                 <Loader2 className="w-12 h-12 text-primary animate-spin" />
-                                <p className="text-muted-foreground">Searching for trending videos and sparking new ideas...</p>
+                                <p className="text-muted-foreground">Thinking about the latest trends and sparking new ideas...</p>
                             </div>
                         )}
                         
@@ -179,7 +179,7 @@ export default function Home() {
                             <div className="flex flex-col items-center">
                                 <div className="w-full">
                                     <div className="text-center mb-8">
-                                        <h2 className="text-3xl font-bold tracking-tight">5 Fresh Ideas for "{lastSearchedNiche}"</h2>
+                                        <h2 className="text-3xl font-bold tracking-tight">5 Fresh Ideas for "{lastSearchedTopic}"</h2>
                                         <p className="text-muted-foreground mt-2">Here are some creative sparks. Click 'Expand Idea' for more details.</p>
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
@@ -187,7 +187,7 @@ export default function Home() {
                                             <IdeaCard
                                                 key={index}
                                                 idea={idea}
-                                                onExpand={() => onExpandClick(idea, lastSearchedNiche)}
+                                                onExpand={() => onExpandClick(idea, lastSearchedTopic)}
                                                 isLoading={isExpandingDetails}
                                                 isSelected={selectedIdea?.title === idea.title}
                                             />
@@ -199,7 +199,7 @@ export default function Home() {
                         
                         {ideas && ideas.length === 0 && !isLoadingIdeas && (
                             <div className="text-center py-16">
-                                <p className="text-muted-foreground">No ideas were generated. Please try a different or more specific niche.</p>
+                                <p className="text-muted-foreground">No ideas were generated. Please try a different or more specific topic.</p>
                             </div>
                         )}
                     </TabsContent>
@@ -218,7 +218,7 @@ export default function Home() {
                 ideaTitle={selectedIdea?.title || ''}
                 details={expandedDetails}
                 isLoading={isExpandingDetails}
-                onSave={() => selectedIdea && handleSaveIdea(selectedIdea, lastSearchedNiche)}
+                onSave={() => selectedIdea && handleSaveIdea(selectedIdea, lastSearchedTopic)}
                 isSaving={false}
                 isSaved={false}
             />
@@ -247,7 +247,7 @@ function SavedIdeasTab() {
                 <History className="mx-auto h-12 w-12 text-muted-foreground" />
                 <h3 className="mt-4 text-lg font-medium">Log in to see your ideas</h3>
                 <p className="mt-1 text-sm text-muted-foreground">
-                    Your saved video ideas will appear here once you log in.
+                    Your saved content ideas will appear here once you log in.
                 </p>
             </div>
         )
@@ -275,7 +275,7 @@ function SavedIdeasTab() {
             <div className="flex justify-between items-center mb-6">
                 <div>
                     <h2 className="text-3xl font-bold tracking-tight">My Saved Ideas</h2>
-                    <p className="text-muted-foreground mt-2">Browse your collection of video ideas.</p>
+                    <p className="text-muted-foreground mt-2">Browse your collection of content ideas.</p>
                 </div>
             </div>
             
@@ -284,7 +284,7 @@ function SavedIdeasTab() {
                     <History className="mx-auto h-12 w-12 text-muted-foreground" />
                     <h3 className="mt-4 text-lg font-medium">No Saved Ideas Yet</h3>
                     <p className="mt-1 text-sm text-muted-foreground">
-                        Go to the 'Generator' tab to create and save some video ideas.
+                        Go to the 'Generator' tab to create and save some content ideas.
                     </p>
                 </div>
             ) : (
