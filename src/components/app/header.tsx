@@ -11,9 +11,14 @@ export function Header() {
             <Video className="h-8 w-8 text-primary" />
           </div>
           <div className="flex flex-col">
-            <h1 className="text-3xl md:text-4xl font-black tracking-tighter text-foreground sm:text-5xl font-headline">
-              Video Ideas by Nitish and Nischal
-            </h1>
+            <div className="flex items-baseline gap-x-2">
+              <h1 className="text-3xl md:text-4xl font-black tracking-tighter text-foreground sm:text-5xl font-headline">
+                Video Ideas
+              </h1>
+              <span className="text-lg md:text-xl text-muted-foreground font-normal">
+                by Nitish and Nischal
+              </span>
+            </div>
             <p className="text-xs md:text-sm text-muted-foreground mt-1 hidden sm:block">
               Ignite your next viral video idea with the power of AI.
             </p>
