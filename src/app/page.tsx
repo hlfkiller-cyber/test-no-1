@@ -4,11 +4,12 @@
 import { useState, useEffect } from 'react';
 import type { GenerateContentIdeasOutput } from '@/ai/flows/generate-video-ideas';
 import type { ExpandContentIdeaDetailsOutput } from '@/ai/flows/expand-video-idea-details';
-import { handleGenerateIdeas, handleExpandIdea } from './actions';
+import { handleGenerateIdeas, handleExpandIdea, handleGenerateStory } from './actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Wand2, History, Trash2, Save, BookText } from 'lucide-react';
+import { Loader2, Wand2, History, Trash2, Save, BookText, Sparkles } from 'lucide-react';
 import { Header } from '@/components/app/header';
 import { IdeaCard } from '@/components/app/idea-card';
 import { IdeaDetailsDialog } from '@/components/app/idea-details-dialog';
@@ -28,6 +29,7 @@ import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebas
 import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { collection, doc } from 'firebase/firestore';
 import { LoginDialog } from '@/components/app/login-dialog';
+import { Card, CardContent } from '@/components/ui/card';
 
 type Idea = GenerateContentIdeasOutput['ideas'][0] & { id?: string };
 
@@ -193,13 +195,7 @@ export default function Home() {
                         )}
                     </TabsContent>
                     <TabsContent value="story-generator">
-                        <div className="text-center py-16">
-                            <BookText className="mx-auto h-12 w-12 text-muted-foreground" />
-                            <h3 className="mt-4 text-lg font-medium">Story Generator Coming Soon</h3>
-                            <p className="mt-1 text-sm text-muted-foreground">
-                                This feature is under construction.
-                            </p>
-                        </div>
+                        <StoryGeneratorTab />
                     </TabsContent>
                     <TabsContent value="history">
                        <SavedIdeasTab />
@@ -224,6 +220,77 @@ export default function Home() {
                 open={showLoginPrompt} 
                 onOpenChange={setShowLoginPrompt}
             />
+        </div>
+    );
+}
+
+function StoryGeneratorTab() {
+    const [prompt, setPrompt] = useState('');
+    const [story, setStory] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const { toast } = useToast();
+
+    const onGenerateStory = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        if (!prompt.trim()) {
+            toast({ title: "Prompt required", description: "Please enter a prompt for your story.", variant: "destructive" });
+            return;
+        }
+
+        setIsLoading(true);
+        setStory('');
+
+        try {
+            const result = await handleGenerateStory({ prompt });
+            setStory(result.story);
+        } catch (error) {
+            console.error(error);
+            toast({ title: "Generation Error", description: "Failed to generate the story. Please try again.", variant: "destructive" });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    return (
+        <div className="max-w-2xl mx-auto py-8">
+            <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold tracking-tight">Fantasy Story Generator</h2>
+                <p className="text-muted-foreground mt-2">Enter a character, a setting, or a simple idea, and let the AI write a fantasy story for you.</p>
+            </div>
+            <form onSubmit={onGenerateStory} className="flex flex-col gap-4 mb-8">
+                <Textarea
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                    placeholder="e.g., A lost knight who finds a talking sword..."
+                    className="flex-grow text-base min-h-[100px]"
+                    aria-label="Story Prompt Input"
+                />
+                <Button type="submit" disabled={isLoading}>
+                    {isLoading ? (
+                        <Loader2 className="animate-spin" />
+                    ) : (
+                        <Sparkles />
+                    )}
+                    <span>Generate Story</span>
+                </Button>
+            </form>
+
+            {isLoading && (
+                <div className="flex flex-col items-center justify-center text-center gap-4 py-16">
+                    <Loader2 className="w-12 h-12 text-primary animate-spin" />
+                    <p className="text-muted-foreground">Weaving a tale from the threads of your imagination...</p>
+                </div>
+            )}
+
+            {story && !isLoading && (
+                <Card>
+                    <CardContent className="p-6">
+                        <div className="whitespace-pre-wrap font-serif text-lg leading-relaxed">
+                            {story}
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
         </div>
     );
 }
@@ -308,9 +375,3 @@ function SavedIdeasTab() {
         </div>
     )
 }
-
-    
-
-    
-
-    
