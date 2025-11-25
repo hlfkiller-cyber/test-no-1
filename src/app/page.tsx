@@ -141,7 +141,7 @@ export default function Home() {
         <div className="flex flex-col min-h-screen">
             <Header />
             <main className="flex-grow container mx-auto px-4 pb-16">
-                <Tabs defaultValue="generator" className="max-w-4xl mx-auto">
+                <Tabs defaultValue="generator" className="max-w-4xl mx-auto mt-8">
                     <TabsList className="grid w-full grid-cols-2">
                         <TabsTrigger value="generator"><Wand2 className="mr-2"/> Generator</TabsTrigger>
                         <TabsTrigger value="history"><History className="mr-2"/> My Ideas</TabsTrigger>
@@ -310,3 +310,5 @@ function SavedIdeasTab() {
         </div>
     )
 }
+
+    
