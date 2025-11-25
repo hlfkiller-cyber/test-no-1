@@ -10,12 +10,13 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useAuth, useUser } from '@/firebase';
-import { GoogleAuthProvider, signInWithPopup, User } from 'firebase/auth';
+import { User } from 'firebase/auth';
 import { doc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
 import { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { initiateGoogleSignIn } from '@/firebase/non-blocking-login';
 
 interface LoginDialogProps {
   open: boolean;
@@ -35,15 +36,18 @@ const GoogleIcon = () => (
 export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
   const auth = useAuth();
   const firestore = useFirestore();
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
   const [isSigningIn, setIsSigningIn] = useState(false);
 
   useEffect(() => {
+    // When user state changes to authenticated, close the dialog.
     if (user && open) {
         setIsSigningIn(false);
         onOpenChange(false);
     }
     
+    // When user state changes to authenticated and we have a firestore instance,
+    // ensure their user document exists.
     if (user && firestore) {
       const checkAndCreateUser = async (currentUser: User) => {
         const userDocRef = doc(firestore, 'users', currentUser.uid);
@@ -57,10 +61,12 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
               photoURL: currentUser.photoURL,
               createdAt: serverTimestamp(),
             };
+            // Use non-blocking write to avoid delaying UI. Errors are handled globally.
             setDocumentNonBlocking(userDocRef, userData, { merge: false });
           }
         } catch (error) {
-          console.error("Error checking or creating user document:", error);
+          // This catch is for getDoc errors, which are less common.
+          console.error("Error checking user document:", error);
         }
       };
       
@@ -70,21 +76,12 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
 
   const handleGoogleSignIn = () => {
     if (!auth) return;
-
     setIsSigningIn(true);
-    const provider = new GoogleAuthProvider();
-
-    signInWithPopup(auth, provider)
-      .catch((error) => {
-        console.error('Google Sign-In Error:', error);
-      })
-      .finally(() => {
-        // This will run regardless of success or failure.
-        // The useEffect handles success, so we only need to handle the non-success case here.
-        // We can check if `user` is set after a short delay, but for now, we'll optimistically rely on onAuthStateChanged
-        // It's better to let the loading state persist until the user state is confirmed.
-      });
+    initiateGoogleSignIn(auth);
   };
+  
+  // Use isUserLoading from the central hook to reflect the initial auth state check.
+  const isAuthInProgress = isSigningIn || isUserLoading;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -99,9 +96,9 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
           <Button
             onClick={handleGoogleSignIn}
             className="w-full"
-            disabled={isSigningIn}
+            disabled={isAuthInProgress}
           >
-            {isSigningIn ? (
+            {isAuthInProgress ? (
               <Loader2 className="animate-spin" />
             ) : (
                 <>

@@ -1,11 +1,23 @@
 'use client';
 import {
-  Auth, // Import Auth type for type hinting
+  Auth,
   signInAnonymously,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  // Assume getAuth and app are initialized elsewhere
+  GoogleAuthProvider,
+  signInWithPopup,
 } from 'firebase/auth';
+
+/** Initiate Google sign-in (non-blocking). */
+export function initiateGoogleSignIn(authInstance: Auth): void {
+  const provider = new GoogleAuthProvider();
+  // CRITICAL: Call signInWithPopup directly. Do NOT use 'await'.
+  // The promise is intentionally not handled here; onAuthStateChanged will manage the result.
+  signInWithPopup(authInstance, provider).catch(error => {
+    // Log errors, but don't block. The user will simply remain unauthenticated.
+    console.error('Google Sign-In Error:', error);
+  });
+}
 
 /** Initiate anonymous sign-in (non-blocking). */
 export function initiateAnonymousSignIn(authInstance: Auth): void {
