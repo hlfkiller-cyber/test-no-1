@@ -37,12 +37,10 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
   const auth = useAuth();
   const firestore = useFirestore();
   const { user, isUserLoading } = useUser();
-  const [isSigningIn, setIsSigningIn] = useState(false);
 
   useEffect(() => {
     // When user state changes to authenticated, close the dialog.
     if (user && open) {
-        setIsSigningIn(false);
         onOpenChange(false);
     }
     
@@ -76,12 +74,8 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
 
   const handleGoogleSignIn = () => {
     if (!auth) return;
-    setIsSigningIn(true);
     initiateGoogleSignIn(auth);
   };
-  
-  // Use isUserLoading from the central hook to reflect the initial auth state check.
-  const isAuthInProgress = isSigningIn || isUserLoading;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -96,9 +90,9 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
           <Button
             onClick={handleGoogleSignIn}
             className="w-full"
-            disabled={isAuthInProgress}
+            disabled={isUserLoading}
           >
-            {isAuthInProgress ? (
+            {isUserLoading ? (
               <Loader2 className="animate-spin" />
             ) : (
                 <>
