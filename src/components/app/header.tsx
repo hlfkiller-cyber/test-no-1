@@ -20,7 +20,7 @@ export function Header() {
                 </h1>
               </Link>
               <span className="text-base sm:text-lg md:text-xl text-muted-foreground font-normal">
-                by Nitish and Nischal
+                by Nitish
               </span>
             </div>
             <p className="text-xs md:text-sm text-muted-foreground mt-1 hidden sm:block">
